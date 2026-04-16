@@ -23,6 +23,7 @@ import logging
 import threading
 from telethon import TelegramClient
 from telethon.tl.types import Chat, Channel, ChatForbidden, ChannelForbidden
+from telethon.tl.functions.channels import CreateChannelRequest from telethon.tl.functions.messages import ExportChatInviteRequest
 from telethon.errors import (
     FloodWaitError, ChatWriteForbiddenError,
     UserBannedInChannelError, ChannelPrivateError
@@ -297,6 +298,8 @@ async def btn_handler(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         )
         return ST_MAIN
 
+  # ── Add this inside your state dict ── state = { # ... your existing fields ... "log_channel_id": None, }
+
     # ── Toggle broadcast ──────────────────────
     if data == "toggle_broadcast":
         if state["running"]:
@@ -500,6 +503,8 @@ async def recv_text(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         reply_markup=main_menu_keyboard()
     )
     return ST_MAIN
+
+# ══════════════════════════════════════════════ # Log Channel Creator # ══════════════════════════════════════════════ async def get_or_create_log_channel(send_msg_func=None): if state["log_channel_id"]: return state["log_channel_id"] result = await userbot(CreateChannelRequest( title="AdBot Logs", about="Logs of all sent messages", megagroup=False )) channel = result.chats[0] state["log_channel_id"] = channel.id # Generate invite link try: invite = await userbot(ExportChatInviteRequest(channel)) invite_link = invite.link except Exception: invite_link = "Could not generate invite link" # Send link to admin (via bot) if send_msg_func: await send_msg_func( f"🆕 *Log Channel Created!*\n\n" f"📛 Name: AdBot Logs\n" f"🆔 ID: `{channel.id}`\n" f"🔗 {invite_link}" ) return channel.id # ══════════════════════════════════════════════ # MODIFY do_broadcast FUNCTION # ══════════════════════════════════════════════ async def do_broadcast(send_msg_func): groups = state["groups"] total = len(groups) # 🔥 CREATE / GET LOG CHANNEL log_channel_id = await get_or_create_log_channel(send_msg_func) while state["running"]: state["round_num"] += 1 success = 0 failed = 0 await send_msg_func( f"📣 *Round {state['round_num']} started* — {total} group(s)" ) for idx, dialog in enumerate(groups, 1): if not state["running"]: break name = dialog.name or str(dialog.id) try: # ✅ SEND MESSAGE if state["mode"] == "text": msg = await userbot.send_message(dialog.entity, state["text"]) content = state["text"] else: msg = await userbot.forward_messages( dialog.entity, state["fwd_msg_id"], state["fwd_source_ent"] ) content = f"Forwarded from {state['fwd_source']} (msg {state['fwd_msg_id']})" success += 1 # 🔗 GENERATE LINK link = "Private Group" try: if getattr(dialog.entity, "username", None): link = f"https://t.me/{dialog.entity.username}/{msg.id}" except: pass # 🧾 LOG MESSAGE log_text = ( f"📢 *Ad Sent*\n\n" f"📝 *Content:*\n{content}\n\n" f"👥 *Group:* {name}\n" f"🔗 *Link:* {link}\n" f"🔁 *Round:* {state['round_num']}" ) try: await userbot.send_message(log_channel_id, log_text) except: pass except Exception: failed += 1 # ❌ LOG FAILURE try: await userbot.send_message( log_channel_id, f"❌ *Failed to send*\n👥 {name}\n🔁 Round {state['round_num']}" ) except: pass # ⏱ Delay (IMPORTANT to reduce ban risk) if idx < total and state["running"]: await asyncio.sleep(state["send_interval"]) state["last_success"] = success state["last_failed"] = failed await send_msg_func( f"🏁 *Round {state['round_num']} done*\n" f"✅ {success} sent ❌ {failed} failed\n" f"💤 Sleeping *{fmt_seconds(state['round_interval'])}* before next round…" ) # Sleep between rounds elapsed = 0 while elapsed < state["round_interval"] and state["running"]: await asyncio.sleep(1) elapsed += 1 await send_msg_func("⏹ *Broadcast stopped.*")
 
 
 @owner_only
