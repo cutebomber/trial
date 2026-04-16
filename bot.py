@@ -45,7 +45,7 @@ logging.basicConfig(
 # ══════════════════════════════════════════════
 API_ID       = 21752358          # From https://my.telegram.org/apps  e.g. 1234567
 API_HASH     = "fb46a136fed4a4de27ab057c7027fec3"          # e.g. "abcdef1234567890abcdef1234567890"
-BOT_TOKEN    = 8628015085:AAHzJx-6NvaHYAlFx-b1gfS0SDU0wFpEO68          # From @BotFather  e.g. "123456:ABCdef..."
+BOT_TOKEN    = "8628015085:AAHzJx-6NvaHYAlFx-b1gfS0SDU0wFpEO68"          # From @BotFather  e.g. "123456:ABCdef..."
 OWNER_ID     = 1899208318          # Your Telegram user ID (integer)  e.g. 987654321
 SESSION_NAME = "broadcaster_userbot"
 # ══════════════════════════════════════════════
