@@ -24,7 +24,8 @@ import logging
 import threading
 from telethon import TelegramClient
 from telethon.tl.types import Chat, Channel, ChatForbidden, ChannelForbidden
-from telethon.tl.functions.channels import CreateChannelRequest, InviteToChannelRequest, ExportInviteRequest
+from telethon.tl.functions.channels import CreateChannelRequest, InviteToChannelRequest
+from telethon.tl.functions.messages import ExportChatInviteRequest
 from telethon.errors import (
     FloodWaitError, ChatWriteForbiddenError,
     UserBannedInChannelError, ChannelPrivateError
